@@ -1,4 +1,3 @@
--- ✅ SYSTEM SETTINGS
 local auraSize = Vector3.new(100, 100, 100)
 local auraRange = 9e9
 local instantKillDamage = 9e99
@@ -7,7 +6,6 @@ local CLAW_NAME = "Super Power Claws"
 local TOOL_NAME = "SuperPowerTool"
 local TOOLS_TO_SPAWN = 35
 
--- ✅ SERVICES
 local Players = cloneref(game:GetService("Players"))
 local RunService = cloneref(game:GetService("RunService"))
 local Workspace = cloneref(game:GetService("Workspace"))
@@ -17,14 +15,12 @@ local CHAR = lp.Character or lp.CharacterAdded:Wait()
 local Ignorelist = OverlapParams.new()
 Ignorelist.FilterType = Enum.RaycastFilterType.Include
 
--- === OVERRIDE ALL WAIT FUNCTIONS TO HEARTBEAT ===
 for _, f in ipairs({wait, task.wait, delay, getrenv().wait}) do
     pcall(function()
         hookfunction(f, function() return RunService.Heartbeat:Wait() end)
     end)
 end
 
--- === OVERRIDE DAMAGE / KILL FUNCTIONS TO INSTANT KILL ===
 local function hookFunctionByName(name)
     for _, f in ipairs(getgc(true)) do
         if typeof(f) == "function" and debug.getinfo(f).name == name then
@@ -47,7 +43,6 @@ for _, f in ipairs(getgc(true)) do
     end
 end
 
--- Extra hooks for remote kill blocks (functions with "kill" in name)
 for _, v in ipairs(getgc(true)) do
     if typeof(v) == "function" and tostring(v):lower():find("kill") then
         local env = getfenv(v)
@@ -59,7 +54,6 @@ for _, v in ipairs(getgc(true)) do
     end
 end
 
--- === TOOL HELPERS ===
 local function GetTouchInterest(tool)
     return tool and tool:FindFirstChildWhichIsA("TouchTransmitter", true)
 end
@@ -90,7 +84,6 @@ local function equipClaw()
     end
 end
 
--- === INSTANT KILL AURA USING TOOL TOUCH ===
 local function ApplyDamageInstant(touchPart, Characters)
     local hits = Workspace:GetPartBoundsInBox(
         touchPart.CFrame,
@@ -108,7 +101,6 @@ local function ApplyDamageInstant(touchPart, Characters)
     end
 end
 
--- === SPAWN INVISIBLE CLONE THAT KILLS ON PROXIMITY ===
 local function spawnClone()
     local char = lp.Character
     if not char then return end
@@ -127,7 +119,7 @@ local function spawnClone()
     if root and realRoot then
         root.CFrame = realRoot.CFrame * CFrame.new(math.random(-50,50), 0, math.random(-50,50))
     end
-    clone.Name = "AuraClone_"..math.random(190000000,99999999999)
+    clone.Name = "Clone_"..math.random(190000000,99999999999)
     clone.Parent = Workspace
 
     RunService.Heartbeat:Connect(function()
@@ -143,7 +135,6 @@ local function spawnClone()
     end)
 end
 
--- === AFTER-DEATH AURA & LAGGING OPPONENT ===
 local afterKillActive = false
 local function afterKillAura()
     if not afterKillActive then return end
@@ -190,7 +181,6 @@ local function onRespawn(newChar)
     newChar:WaitForChild("Humanoid").Died:Connect(onDied)
 end
 
--- === TOOL SPAWNING & EQUIPPING ===
 local Backpack = lp:WaitForChild("Backpack")
 
 local function spawnTools()
@@ -200,8 +190,6 @@ local function spawnTools()
             local clone = toolTemplate:Clone()
             clone.Parent = Backpack
         end
-    else
-        warn("Tool not found: "..TOOL_NAME)
     end
 end
 
@@ -213,9 +201,7 @@ local function equipAllTools()
     end
 end
 
--- === MAIN HEARTBEAT LOOP ===
 RunService.Heartbeat:Connect(function()
-    -- Instant kill aura with tools
     local char = lp.Character
     if not char then return end
     local Tools, Characters = {}, {}
@@ -231,12 +217,9 @@ RunService.Heartbeat:Connect(function()
             ApplyDamageInstant(touch, Characters)
         end
     end
-
-    -- After kill aura
     afterKillAura()
 end)
 
--- === SPAWN & EQUIP TOOLS IN FAST LOOP (no delay) ===
 spawnTools()
 equipAllTools()
 task.spawn(function()
@@ -247,10 +230,7 @@ task.spawn(function()
     end
 end)
 
--- === INITIAL SETUP ===
 equipClaw()
 for i = 1, clonesToSpawn do spawnClone() end
 CHAR:WaitForChild("Humanoid").Died:Connect(onDied)
 lp.CharacterAdded:Connect(onRespawn)
-
-print("✅ MEGA PSYCHO AURA + SUPER POWER TOOL SPAWN & KILL SYSTEM ACTIVE")
